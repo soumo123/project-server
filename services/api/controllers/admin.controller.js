@@ -8,6 +8,8 @@ import jwt from 'jsonwebtoken'
 
 
 
+
+
 const signUp = async (req, res) => {
     let { name, email, password, mobile } = req.body;
     const file = req.file;

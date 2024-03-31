@@ -13,43 +13,43 @@ dotenv.config({
 
 
 const app = express()
-// const allowedOrigins = [process.env.REACT_LOCAL_CLIENT_URL, process.env.REACT_LOCAL_CLIENT_URL];
+const allowedOrigins = [process.env.REACT_LOCAL_CLIENT_URL, process.env.REACT_LOCAL_CLIENT_URL];
 
-// console.log("process.env.REACT_CLIENT_URL === ", process.env.REACT_LOCAL_CLIENT_URL)
-
-
-
-// const corsOptions = {
-//   origin: (origin, callback) => {
-//     if (allowedOrigins.includes(origin)) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   methods: ['GET', 'POST', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-//   credentials: true,
-// };
+console.log("process.env.REACT_CLIENT_URL === ", process.env.REACT_LOCAL_CLIENT_URL)
 
 
 
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
 
-// app.use(cors(corsOptions));
 
 
 
-app.use(cors());
-// app.use((req, res, next) => {
-//   const origin = req.headers.origin;
-//   if (allowedOrigins.includes(origin)) {
-//     res.setHeader('Access-Control-Allow-Origin', origin);
-//   }
-//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-//   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization');
-//   res.setHeader('Access-Control-Allow-Credentials', true);
-//   return next();
-// });
+app.use(cors(corsOptions));
+
+
+
+// app.use(cors());
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT , OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  return next();
+});
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));

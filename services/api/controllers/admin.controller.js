@@ -1,4 +1,5 @@
 import User from '../models/user.model.js'
+import Cart from '../models/cart.model.js'
 import uploadFileToS3 from '../utils/fileUpload.js'
 import { getNextSequentialId, checkPassword } from '../utils/helper.js'
 import bcrypt from 'bcryptjs'
@@ -44,6 +45,11 @@ const signUp = async (req, res) => {
 
         const user = await User.create({
             userId: lastId, name, email, password, mobile, image: s3Url
+        })
+
+        const cart  = await Cart.create({
+            userId:lastId,
+            products:[]
         })
 
         return res.status(200).json({ message: 'User Craeted', success: true });

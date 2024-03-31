@@ -32,16 +32,18 @@ const productSchema = new mongoose.Schema({
     isFeatured:{
         type:Boolean,
         default:true
-
+    },
+    isOffered:{
+        type:Boolean,
+        default:false
     },
     isTopSelling:{
         type:Boolean,
         default:true
-
     },
     isBranded:{
         type:Boolean,
-        default:true
+        default:false
     },
     discount:{
         type:Number,

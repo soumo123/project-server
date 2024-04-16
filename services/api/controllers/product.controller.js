@@ -5,19 +5,22 @@ import uploadFileToS3 from '../utils/fileUpload.js'
 import { getNextSequentialId, checkPassword, getLastAndIncrementId } from '../utils/helper.js'
 
 
-const createProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
 
-    let { name, description, type, price, stock, color, size, visiblefor, discount, deliverydays, tags, isBestSelling, isFeatured,
+    let { name, description, other_description1, other_description2, weight, unit, type, price, stock, color, size, visiblefor, discount, deliverydays, tags, isBestSelling, isFeatured,
         isTopSelling, isBranded, isOffered
     } = req.body;
     const adminId = req.params.adminId
-    const files = req.files;
+    let files = req.files;
+    let newTag = []
+    console.log("tags", tags)
+
     let thumbnailimage = "";
     let otherimages = []
 
     try {
+        newTag = tags.map((ele) => Number(ele))
 
-        tags = tags.split(",").map(item => Number(item));
         if (!name || !description || !type || !price || !stock) {
             return res.status(400).send({
                 message: 'Field is missing'
@@ -29,9 +32,11 @@ const createProduct = async (req, res) => {
 
         const bucketName = process.env.S3_BUCKT_NAME;
         for (let i = 0; i < files.length; i++) {
+            console.log("fileBuffer", files[i])
             const fileBuffer = files[i].buffer;
             const key = files[i].originalname;
             const s3Url = await uploadFileToS3(bucketName, key, fileBuffer);
+            console.log("s3Urls3Url", s3Url)
             if (i === 0) {
                 thumbnailimage = s3Url;
             } else {
@@ -53,13 +58,17 @@ const createProduct = async (req, res) => {
             type: Number(type),
             name: name,
             description: description,
+            other_description1: other_description1,
+            other_description2: other_description2,
+            weight: Number(weight),
+            unit: unit,
             price: Number(price),
             discount: Number(discount),
             actualpricebydiscount: Number(actualpricebydiscount),
             stock: stock,
             color: color,
             size: size,
-            tags: tags,
+            tags: newTag,
             visiblefor: visiblefor,
             thumbnailimage: thumbnailimage,
             otherimages: otherimages,
@@ -215,7 +224,7 @@ const createTags = async (req, res) => {
             tag_id: Number(tagId),
             userId: adminId,
             tag_name: name,
-            type: Number(type)
+            type: Number(type),
         })
 
         return res.status(201).send({
@@ -231,14 +240,53 @@ const createTags = async (req, res) => {
 }
 
 
+const deleteTags = async (req, res) => {
 
-const getAllTags = async (req, res) => {
+    const tagsId = Number(req.query.tagId);
+    const type = Number(req.query.type);
+    const adminId = req.params.adminId
 
-    const type = req.query.type;
 
     try {
 
-        const tags = await Tags.find({ type: type })
+        if(!tagsId) {
+            return res.status(400).send({
+                message:"Tag id is missing",
+                success:false
+            })
+        }
+
+        const response = await Tags.deleteOne({type:type,userId:adminId,tag_id:tagsId})
+
+        console.log("responseresponse",response)
+
+
+        return res.status(200).send({
+            message:"Tag deleted successfully",
+            success:true
+        })
+
+    } catch (error) {
+        console.log(error.stack);
+        return res.status(500).send({ message: "Internal Server Error", error: error.stack });
+    }
+
+
+}
+
+
+const getAllTags = async (req, res) => {
+
+    const type = Number(req.query.type);
+    const adminId = req.query.userId;
+    let tags = undefined
+    try {
+
+        if (!adminId) {
+            tags = await Tags.find({ type: type })
+        } else {
+            tags = await Tags.find({ type: type, userId: adminId })
+        }
 
         let result = tags.map((ele) => ({
             label: ele.tag_name,
@@ -262,7 +310,7 @@ const addToCart = async (req, res) => {
     const type = req.query.type;
 
     try {
-        const { name, description, price, itemCount, discount, thumbImage ,totalPrice} = req.body;
+        const { name, description, price, itemCount, discount, thumbImage, totalPrice } = req.body;
 
         const user = await Cart.findOne({ userId: userId });
 
@@ -270,8 +318,11 @@ const addToCart = async (req, res) => {
             return res.status(400).send({ message: "User Not Found In cart", success: false });
         }
 
-        const carts = await Cart.findOne({type:type,userId:userId},{products:{$elemMatch:{productId:productId}}})
-        if(carts.products.length>0){
+        const carts = await Cart.findOne({ type: type, userId: userId }, { products: { $elemMatch: { productId: productId } } })
+
+        console.log("carts", carts)
+
+        if (carts.products.length > 0) {
             return res.status(400).send({ message: "Product Already in cart", success: false });
         }
 
@@ -340,12 +391,12 @@ const getAllCartProducts = async (req, res) => {
             return res.status(400).send({ message: "No products in cart", success: false });
         }
         let totalPrice = 0;
-        user.products.map((ele)=>{
+        user.products.map((ele) => {
             totalPrice = totalPrice + ele.totalPrice
         })
 
 
-        return res.status(200).send({ message: "All cart items", data: user.products,totalPrice })
+        return res.status(200).send({ message: "All cart items", data: user.products, totalPrice })
 
     } catch (error) {
         console.log(error.stack);
@@ -361,17 +412,17 @@ const deleteCartItems = async (req, res) => {
     const productId = req.body.productId;
 
     try {
-        const data  = await Cart.findOne({ userId:userId,type:type});
+        const data = await Cart.findOne({ userId: userId, type: type });
 
-        if(data.products.length===0){
-            return res.status(400).send({message:"No Product Found"})
+        if (data.products.length === 0) {
+            return res.status(400).send({ message: "No Product Found" })
         }
 
         let unmatchedProducts = data.products.filter(product => !productId.includes(product.productId));
 
         await Cart.updateOne({ userId: userId }, { $set: { products: unmatchedProducts } });
 
-        return res.status(200).send({ message: "Cart Item deleted successfully" ,success:true})
+        return res.status(200).send({ message: "Cart Item deleted successfully", success: true })
 
 
     } catch (error) {
@@ -380,6 +431,98 @@ const deleteCartItems = async (req, res) => {
     }
 
 }
+
+const deleteSpecificItemFromCart = async (req, res) => {
+    const userId = req.query.userId;
+    const productId = req.query.productId;
+    const type = Number(req.query.type)
+
+    try {
+        const data = await Cart.findOne({ userId: userId, type: type });
+
+
+
+        if (data.products.length === 0) {
+            return res.status(400).send({ message: "No Product Found" })
+        }
+
+        const updateProducts = data.products.filter(ele => ele.productId !== productId);
+
+        await Cart.updateOne({ userId: data.userId, type: type }, { $set: { products: updateProducts } });
+
+        return res.status(200).send({ message: "Item Deleted Successfully" })
+
+    } catch (error) {
+        return res.status(400).send(error.stack)
+
+    }
+}
+
+//get all products of admin //
+
+const adminProducts = async (req, res) => {
+
+    const adminId = req.query.adminId;
+    const type = Number(req.query.type);
+
+    try {
+
+        const products = await Product.find({ adminId: adminId, type: type })
+
+        if (products.length === 0) {
+            return res.status(404).send({ message: "Get All Products", data: [] })
+        }
+
+        return res.status(200).send({ message: "Get All Products", data: products })
+
+
+    } catch (error) {
+        return res.status(400).send(error.stack)
+    }
+
+}
+
+//Delete Product By Admin ///
+
+
+const deleteProductByAdmin = async (req, res) => {
+
+    const adminId = req.query.adminId;
+    const type = Number(req.query.type);
+    const productId = req.query.productId
+
+
+    try {
+        const products = await Product.deleteOne({ adminId: adminId, type: type, productId: productId })
+        return res.status(200).send({ message: "Product Deleted Successfully", success: true })
+
+    } catch (error) {
+        return res.status(400).send(error.stack)
+    }
+}
+
+
+const editTag = async(req,res)=>{
+    const adminId = req.params.adminId;
+    const tagId = Number(req.params.tag_id)
+    const { name, type } = req.body
+
+    try {
+        if(!tagId) {
+            return res.status(400).send({ message:"Tag id is missing" , success: false})
+        }
+
+        const response = await Tags.updateOne({ userId: adminId , type: type , tag_id:tagId}, { $set: { tag_name: name } });
+
+        return res.status(201).send({ message:"Tag updated" , success: true})
+
+
+    } catch (error) {
+        console.log(error.stack);
+        return res.status(500).send({ message: "Internal Server Error", error: error.stack });
+    }
+}
+
 
 
 export {
@@ -390,5 +533,10 @@ export {
     getTotalRatings,
     addToCart,
     getAllCartProducts,
-    deleteCartItems
+    deleteCartItems,
+    deleteSpecificItemFromCart,
+    adminProducts,
+    deleteProductByAdmin,
+    deleteTags,
+    editTag
 }

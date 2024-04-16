@@ -17,6 +17,20 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    other_description1:{
+        type:String
+    },
+    other_description2:{
+        type:String
+    },
+    weight:{
+        type:Number,
+        default:1
+    },
+    unit:{
+        type:String,
+        default:"gram"
+    },
     price: {
         type: Number,
         required: true

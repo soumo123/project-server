@@ -13,39 +13,45 @@ dotenv.config({
 
 
 const app = express()
-const allowedOrigins = [process.env.REACT_LOCAL_CLIENT_URL, process.env.REACT_LOCAL_CLIENT_URL];
+const allowedOrigins = [
+  process.env.REACT_LOCAL_CLIENT_URL,
+  process.env.REACT_LOCAL_CLIENT_DASHBOARD_URL
+];
 
-console.log("process.env.REACT_CLIENT_URL === ", process.env.REACT_LOCAL_CLIENT_URL)
-
-
+console.log("Allowed Origins:", allowedOrigins);
 
 const corsOptions = {
   origin: (origin, callback) => {
+    console.log("Request Origin:", origin);
+    if (!origin) return callback(null, true); // Allow requests with no origin (like mobile apps or curl requests)
+
     if (allowedOrigins.includes(origin)) {
+      console.log("Origin Allowed:", origin);
       callback(null, true);
     } else {
+      console.log("Origin Not Allowed:", origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT','OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+  credentials: true
 };
-
-
-
 
 app.use(cors(corsOptions));
 
+// For preflight requests (OPTIONS method)
+app.options('*', cors(corsOptions));
 
-
-// app.use(cors());
+// For handling non-preflight requests
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  console.log("Request Origin (Middleware):", origin);
   if (allowedOrigins.includes(origin)) {
+    console.log("Origin Allowed (Middleware):", origin);
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT , OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', true);
   return next();

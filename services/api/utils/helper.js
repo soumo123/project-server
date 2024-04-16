@@ -2,6 +2,8 @@ import User from '../models/user.model.js'
 import Product from '../models/product.model.js'
 import Tags from '../models/tags.model.js'
 import bcrypt from 'bcryptjs'
+import Admin from '../models/admin.model.js';
+import Shops from '../models/shop.model.js';
 
 
 
@@ -21,6 +23,16 @@ const getNextSequentialId = async (ids) => {
     idPrefix = "PD";
     lastId = await Product.findOne().sort({ _id: -1 });
     existingIds.push(lastId && lastId.productId ? lastId.productId : "");
+  }
+  if(ids ==="ADMIN"){
+    idPrefix = "ADMIN";
+    lastId = await Admin.findOne().sort({ _id: -1 });
+    existingIds.push(lastId && lastId.adminId ? lastId.adminId : "");
+  }
+  if(ids==="SHOP"){
+    idPrefix = "SHOP";
+    lastId = await Shops.findOne().sort({ _id: -1 });
+    existingIds.push(lastId && lastId.shop_id ? lastId.shop_id : "");
   }
   // Uncomment the else block if needed
   // else {
@@ -77,10 +89,33 @@ const getLastAndIncrementId = async () => {
   }
 };
 
+const getLastTypeId = async () => {
+  try {
+      // Find the document with the highest ID
+      const lastTag = await Shops.aggregate([
+          { $group: { _id: null, type: { $max: "$type" } } }
+      ]);
+    
+      // If there are no tags yet, start with ID 1
+      let newId = 1;
+
+      // If there are tags, increment the maximum ID by 1
+      if (lastTag.length > 0) {
+          newId = lastTag[0].type + 1;
+      }
+
+      return newId;
+  } catch (error) {
+      console.error("Error occurred while getting and incrementing the last ID:", error);
+      throw error;
+  }
+};
+
   
   export {
     getNextSequentialId,
     checkPassword,
-    getLastAndIncrementId
+    getLastAndIncrementId,
+    getLastTypeId
   }
   

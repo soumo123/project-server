@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { addToCart, createProduct , createTags, deleteCartItems, getAllCartProducts, getAllProducts, getAllTags, getTotalRatings } from '../../controllers/product.controller.js';
+import { addToCart, adminProducts, createProduct , createTags, deleteCartItems, deleteProductByAdmin, deleteSpecificItemFromCart, deleteTags, editTag, getAllCartProducts, getAllProducts, getAllTags, getTotalRatings } from '../../controllers/product.controller.js';
 import {ensureAuthenticated} from '../../middleware/jwtVerify.js'
 import multer from 'multer';
 
@@ -15,10 +15,17 @@ router.get('/getallratings',getTotalRatings)
 router.put('/addToCart',addToCart)
 router.get('/getallcartproducts',getAllCartProducts)
 router.put("/deleteCart",deleteCartItems)
+router.put("/deleteById",deleteSpecificItemFromCart)
 
 
 
 
+//admin//
+
+router.get('/get_admin_products', adminProducts);
+router.delete('/delete_product_by_admin', deleteProductByAdmin);
+router.delete("/delete_tags/:adminId",deleteTags)
+router.put("/update_tags/:adminId/:tag_id",editTag)
 
 
 export default router;

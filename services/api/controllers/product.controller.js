@@ -1,6 +1,7 @@
 import Cart from '../models/cart.model.js'
 import Product from '../models/product.model.js'
 import Tags from '../models/tags.model.js'
+import Whishlists from '../models/whishlist.controller.js'
 import uploadFileToS3 from '../utils/fileUpload.js'
 import { getNextSequentialId, checkPassword, getLastAndIncrementId } from '../utils/helper.js'
 
@@ -19,7 +20,15 @@ const createProduct = async (req, res, next) => {
     let otherimages = []
 
     try {
-        newTag = tags.map((ele) => Number(ele))
+        if (tags) {
+            if (Array.isArray(tags)) {
+                newTag = newTag.concat(tags.map(ele => Number(ele)));
+            } else {
+                newTag.push(Number(tags));
+            }
+            console.log("newTag", newTag);
+        }
+        console.log("newTag", newTag)
 
         if (!name || !description || !type || !price || !stock) {
             return res.status(400).send({
@@ -249,21 +258,21 @@ const deleteTags = async (req, res) => {
 
     try {
 
-        if(!tagsId) {
+        if (!tagsId) {
             return res.status(400).send({
-                message:"Tag id is missing",
-                success:false
+                message: "Tag id is missing",
+                success: false
             })
         }
 
-        const response = await Tags.deleteOne({type:type,userId:adminId,tag_id:tagsId})
+        const response = await Tags.deleteOne({ type: type, userId: adminId, tag_id: tagsId })
 
-        console.log("responseresponse",response)
+        console.log("responseresponse", response)
 
 
         return res.status(200).send({
-            message:"Tag deleted successfully",
-            success:true
+            message: "Tag deleted successfully",
+            success: true
         })
 
     } catch (error) {
@@ -502,19 +511,19 @@ const deleteProductByAdmin = async (req, res) => {
 }
 
 
-const editTag = async(req,res)=>{
+const editTag = async (req, res) => {
     const adminId = req.params.adminId;
     const tagId = Number(req.params.tag_id)
     const { name, type } = req.body
 
     try {
-        if(!tagId) {
-            return res.status(400).send({ message:"Tag id is missing" , success: false})
+        if (!tagId) {
+            return res.status(400).send({ message: "Tag id is missing", success: false })
         }
 
-        const response = await Tags.updateOne({ userId: adminId , type: type , tag_id:tagId}, { $set: { tag_name: name } });
+        const response = await Tags.updateOne({ userId: adminId, type: type, tag_id: tagId }, { $set: { tag_name: name } });
 
-        return res.status(201).send({ message:"Tag updated" , success: true})
+        return res.status(201).send({ message: "Tag updated", success: true })
 
 
     } catch (error) {
@@ -524,6 +533,55 @@ const editTag = async(req,res)=>{
 }
 
 
+
+const addWhishList = async (req, res) => {
+
+    try {
+        const whish = Boolean(req.query.status);
+        const userId = req.query.userId;
+        const type= Number(req.query.type)
+        const prouctId = req.query.productId
+
+        const { name, description, price, discount, thumbImage, totalPrice } = req.body;
+
+        if(whish) {
+            const result = await Whishlists.create({
+                productId:prouctId,
+                type:type,
+                userId:userId,
+                likes:whish,
+                name:name,
+                description:description,
+                price:price,
+                discount:discount,
+                thumbImage:thumbImage,
+                totalPrice:totalPrice
+
+            })
+        }else{
+            let body = {
+                productId:prouctId,
+                type:type,
+                userId:userId,
+                likes:whish,
+                name:name,
+                description:description,
+                price:price,
+                discount:Number(discount),
+                thumbImage:thumbImage,
+                totalPrice:Number(totalPrice)
+            }
+            const result =  await Whishlists.updateOne({userId:userId,productId:prouctId,type:type},{$set:body})
+        }
+
+        return res.status(200).send({message:"Whislist Updated"})
+
+    } catch (error) {
+        console.log(error.stack);
+        return res.status(500).send({ message: "Internal Server Error", error: error.stack });
+    }
+
+}
 
 export {
     createProduct,
@@ -538,5 +596,6 @@ export {
     adminProducts,
     deleteProductByAdmin,
     deleteTags,
-    editTag
+    editTag,
+    addWhishList
 }

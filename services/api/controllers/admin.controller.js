@@ -93,6 +93,7 @@ const signIn = async (req, res) => {
             email: user.email,
             image: user.image,
             mobile: user.mobile,
+            type:user.type
 
         }
 
@@ -391,6 +392,37 @@ const createShop = async (req, res) => {
             type: Number(lastType)
         })
 
+        const images = await Images.create({
+            adminId:adminId,
+            type:Number(type),
+            staticImages: {
+                logo: "https://shopcake.s3.ap-south-1.amazonaws.com/logo.png",
+                banner1: "https://shopcake.s3.ap-south-1.amazonaws.com/banner-1.jpg",
+                banner2: "https://shopcake.s3.ap-south-1.amazonaws.com/capsicum.png",
+                banner3: "https://shopcake.s3.ap-south-1.amazonaws.com/lychee.png",
+                caraousel1: "https://shopcake.s3.ap-south-1.amazonaws.com/fruits.png",
+                caraousel2: "https://shopcake.s3.ap-south-1.amazonaws.com/banner3.png",
+                caraousel3: "https://shopcake.s3.ap-south-1.amazonaws.com/banner2.png",
+                caraousel4: "",
+                category1: "https://shopcake.s3.ap-south-1.amazonaws.com/baby-care.png",
+                category2: "https://shopcake.s3.ap-south-1.amazonaws.com/bakery-biscuits.png",
+                category3: "https://shopcake.s3.ap-south-1.amazonaws.com/beauty-health.png",
+                category4: "https://shopcake.s3.ap-south-1.amazonaws.com/breakfast.png",
+                category5: "https://shopcake.s3.ap-south-1.amazonaws.com/cleaning.png",
+                category6: "https://shopcake.s3.ap-south-1.amazonaws.com/coffee-drinks.png",
+                category7: "",
+                category8: "",
+                middle_banner1: "https://shopcake.s3.ap-south-1.amazonaws.com/pago.png",
+                middle_banner2: "https://shopcake.s3.ap-south-1.amazonaws.com/vegetables.png",
+                middle_banner3: "https://shopcake.s3.ap-south-1.amazonaws.com/banner-2.jpg",
+                middle_banner4: "https://shopcake.s3.ap-south-1.amazonaws.com/banner-3.png",
+                middle_banner5: "https://shopcake.s3.ap-south-1.amazonaws.com/banner-4.jpg",
+                middle_banner6: "https://shopcake.s3.ap-south-1.amazonaws.com/blog-thumb-1.jpg",
+                middle_banner7: "https://shopcake.s3.ap-south-1.amazonaws.com/blog-thumb-2.jpg",
+                middle_banner8: "https://shopcake.s3.ap-south-1.amazonaws.com/beef.png",
+                loader: "https://shopcake.s3.ap-south-1.amazonaws.com/preloader.gif"
+              }
+        })
 
         return res.status(200).json({ message: 'Shop Craeted Successfully', success: true });
 

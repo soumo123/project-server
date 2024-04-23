@@ -13,6 +13,10 @@ const imagesSchema = new mongoose.Schema({
 
     staticImages: 
         {
+            loader:{
+                type:String
+            },
+
             logo: {
                 type: String
             },

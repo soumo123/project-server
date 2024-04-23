@@ -5,6 +5,7 @@ import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
 import user from './api/routes/admin/admin.routes.js'
 import product from './api/routes/product/product.routes.js'
+import setting from './api/routes/settings/setting.routes.js'
 import dotenv from 'dotenv';
 
 dotenv.config({
@@ -68,6 +69,8 @@ connectToDatabase()
 
 app.use("/api/v1",user)
 app.use("/api/v1/product",product)
+app.use("/api/v1/settings",setting)
+
 
 
 

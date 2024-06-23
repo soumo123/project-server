@@ -27,4 +27,7 @@ router.get('/get_admin', ensureAuthenticated , getAdmin);
 router.post('/craete_shop',upload,createShop)
 router.get("/get_all_shops",getAllShopsForParticularOwner)
 
+
+
+
 module.exports = router

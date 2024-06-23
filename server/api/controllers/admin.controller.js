@@ -487,19 +487,19 @@ const addReview = async (req, res) => {
         let username = user.name;
         let userImage = user.image;
 
-        const review = await Product.findOne({productId: productId,type:type}, { reviews: { $elemMatch: { userId: userId } } })
-        const numberofreview = await Product.findOne({productId: productId,type:type});
+        const review = await Product.findOne({ productId: productId, type: type }, { reviews: { $elemMatch: { userId: userId } } })
+        const numberofreview = await Product.findOne({ productId: productId, type: type });
         let totalNumber = numberofreview.numOfReviews
-        console.log("review" , review)
-        if(review.reviews.length>0){
+        console.log("review", review)
+        if (review.reviews.length > 0) {
             return res.status(404).send({ success: false, message: "Already added review" })
         }
-          
-        let response = await Product.updateOne({ productId: productId,type:type },
+
+        let response = await Product.updateOne({ productId: productId, type: type },
             {
                 $push: {
                     reviews: {
-                        userId:userId,
+                        userId: userId,
                         username: username,
                         userImage: userImage,
                         rating: rating,
@@ -507,8 +507,8 @@ const addReview = async (req, res) => {
                     }
 
                 },
-                $set:{
-                    numOfReviews:Number(totalNumber) + 1
+                $set: {
+                    numOfReviews: Number(totalNumber) + 1
                 }
             }
         )
@@ -532,14 +532,16 @@ const getAllReviews = async (req, res) => {
         const result = await Product.findOne({ productId: productId, type: type })
 
         let reviews = result.reviews
-        if(reviews.length===0) {
-            return res.status(400).send({success:false,message:"No Reviews",data:[]})
+        if (reviews.length === 0) {
+            return res.status(400).send({ success: false, message: "No Reviews", data: [] })
         }
-        return res.status(200).send({success:true,data:reviews})
+        return res.status(200).send({ success: true, data: reviews })
     } catch (error) {
         console.log(error.stack);
         return res.status(500).send({ message: "Internal Server Error", error: error.stack });
     }
 }
 
-module.exports = { signUp, signIn, getUser, getAllImages, getuserDetailsByAdmin, userSpecificDetails, registerAdmin, signinAdmin, createShop, getAdmin, getAllShopsForParticularOwner, addReview,getAllReviews }
+
+
+module.exports = { signUp, signIn, getUser, getAllImages, getuserDetailsByAdmin, userSpecificDetails, registerAdmin, signinAdmin, createShop, getAdmin, getAllShopsForParticularOwner, addReview, getAllReviews }

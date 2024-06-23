@@ -6,6 +6,8 @@ const cookieParser = require('cookie-parser')
 const user =require('./api/routes/admin/admin.routes.js')
 const product = require('./api/routes/product/product.routes.js')
 const setting = require('./api/routes/settings/setting.routes.js')
+const checkouts = require("./api/routes/checkougt/checkout.routes.js")
+const orders = require('./api/routes/order/order.routes.js')
 const dotenv = require('dotenv');
 
 dotenv.config({
@@ -70,8 +72,8 @@ connectToDatabase()
 app.use("/api/v1",user)
 app.use("/api/v1/product",product)
 app.use("/api/v1/settings",setting)
-
-
+app.use("/api/v1/checkout",checkouts)
+app.use("/api/v1/orders",orders)
 
 app.get('/',function(req,res){
   res.set('Content-type', 'text/html;charset=utf-8');

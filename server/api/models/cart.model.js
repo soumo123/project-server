@@ -34,15 +34,18 @@ const addToCartSchema = new mongoose.Schema({
                 type:String,
                 default:""
             },
+            stock:{
+                type:Number
+            },
             itemCount:{
                 type:Number
             },
             totalPrice:{
                 type:Number
             },
-            discount:{
-                type:Number
-            },
+            // discount:{
+            //     type:Number
+            // },
             thumbImage:{
                 type:String
             }

@@ -5,6 +5,10 @@ const Tags = require('../models/tags.model.js')
 const bcrypt = require('bcryptjs')
 const Admin = require('../models/admin.model.js');
 const Shops = require('../models/shop.model.js');
+const Vendor = require("../models/vendor.model.js")
+const Agent = require("../models/agent.model.js")
+const Distribute = require('../models/distribute-order.model.js')
+
 const CheckoutAdress = require('../models/checkoutadress.model')
 
 
@@ -40,6 +44,21 @@ const getNextSequentialId = async (ids) => {
     idPrefix = "ORDER";
     lastId = await Order.findOne().sort({ _id: -1 });
     existingIds.push(lastId && lastId.orderId ? lastId.orderId : "");
+  }
+  if(ids==="VEN"){
+    idPrefix = "VEN";
+    lastId = await Vendor.findOne().sort({ _id: -1 });
+    existingIds.push(lastId && lastId.vendorId ? lastId.vendorId : "");
+  }
+  if(ids==="AGENT"){
+    idPrefix = "AGENT";
+    lastId = await Agent.findOne().sort({ _id: -1 });
+    existingIds.push(lastId && lastId.agentId ? lastId.agentId : "");
+  }
+  if(ids==="TRANS"){
+    idPrefix = "TRANS";
+    lastId = await Distribute.findOne().sort({ _id: -1 });
+    existingIds.push(lastId && lastId.transaction_id ? lastId.transaction_id : "");
   }
   // Uncomment the else block if needed
   // else {

@@ -1,5 +1,6 @@
 const Order = require('../models/order.model.js');
 const Cart = require("../models/cart.model.js")
+const Product = require('../models/product.model.js')
 const { getNextSequentialId } = require('../utils/helper.js');
 
 
@@ -7,22 +8,42 @@ const createOrder = async (req, res) => {
 
     try {
 
-        const { receivedData, shippingPrice, tax, initialDeposit, orderedPrice } = req.body
-        const { userId, type, shop_id } = req.query
+        const { receivedData, cgst, sgst, initialDeposit, orderedPrice , username , extrathings , extraprice ,notes,discount,status,paid} = req.body
+        const { userId, type, shop_id,adminId } = req.query
         let orderId = await getNextSequentialId("ORDER");
 
         const order = await Order.create({
             orderId: orderId,
+            adminId:adminId || "",
+            username:username || "",
+            extrathings:extrathings || "",
+            extraprice:extraprice || 0,
+            notes:notes || "",
+            discount:discount || 0,
             userId,
             shopId: shop_id,
             type,
             products: receivedData,
-            shippingPrice: Number(shippingPrice),
-            tax: tax,
+            cgst: Number(cgst),
+            sgst: Number(sgst),
+            status:status || 0,
             initialDeposit: initialDeposit,
-            orderedPrice: orderedPrice
-
+            orderedPrice: orderedPrice,
+            paid:paid || false
         })
+
+        for (const item of receivedData) {
+            const { productId, weight, itemCount } = item;
+            await Product.updateOne(
+                { 
+                    productId: productId, 
+                    'weight.weight': weight 
+                },
+                { 
+                    $inc: { 'weight.$.stock': -itemCount }
+                }
+            );
+        }
 
         const removeCart = await Cart.updateOne({ userId: userId }, { $set: { products: [] } })
 

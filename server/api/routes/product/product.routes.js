@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addToCart, addWhishList, adminProducts, createProduct , createTags, deleteCartItems, deleteProductByAdmin, deleteSpecificItemFromCart, deleteTags, editTag, getAllCartProducts, getAllProducts, getAllTags, getTotalRatings, getWhishListProducts, getProductById, updateProduct, avaliabilityCheck, countUpdate, updateCategoryStatus } = require('../../controllers/product.controller.js');
+const { addToCart, addWhishList, adminProducts, createProduct , createTags, deleteCartItems, deleteProductByAdmin, deleteSpecificItemFromCart, deleteTags, editTag, getAllCartProducts, getAllProducts, getAllTags, getTotalRatings, getWhishListProducts, getProductById, updateProduct, avaliabilityCheck, countUpdate, updateCategoryStatus, productPriceVariation } = require('../../controllers/product.controller.js');
 const {ensureAuthenticated} = require('../../middleware/jwtVerify.js')
 const multer = require('multer');
 
@@ -25,7 +25,7 @@ router.put("/add_whishlist",addWhishList)
 router.get("/get_whishlist",getWhishListProducts)
 router.put("/count_update",countUpdate)
 router.put('/category_update',updateCategoryStatus)
-
+router.get('/variation_price',productPriceVariation)
 
 
 //admin//

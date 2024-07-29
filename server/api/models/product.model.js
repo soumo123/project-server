@@ -15,7 +15,6 @@ const productSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true
     },
     other_description1:{
         type:String
@@ -31,9 +30,9 @@ const productSchema = new mongoose.Schema({
         type:String,
         default:"gram"
     },
-    price: {
-        type: Number,
-    },
+    // price: {
+    //     type: Number,
+    // },
     purchase_price:{
         type:String
     },
@@ -95,22 +94,22 @@ const productSchema = new mongoose.Schema({
         type:Boolean,
         default:false
     },
-    discount:{
-        type:Number,
-        default: 0
-    },
-    actualpricebydiscount: {
-        type: Number,
-        required: true
-    },
+    // discount:{
+    //     type:Number,
+    //     default: 0
+    // },
+    // actualpricebydiscount: {
+    //     type: Number,
+    //     required: true
+    // },
     ratings: {
         type: Number,
         default:5
     },
-    stock: {
-        type: Number,
-        required: true
-    },
+    // stock: {
+    //     type: Number,
+    //     required: true
+    // },
     color: {
         type: String,
         default: ''

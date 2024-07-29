@@ -24,16 +24,19 @@ const whishListSchema = new mongoose.Schema({
     price: {
         type: Number,
     },
-    discount:{
-        type:Number,
-        default: 0
-    },
+    // discount:{
+    //     type:Number,
+    //     default: 0
+    // },
     ratings: {
         type: Number,
         default:5
     },
     stock: {
         type: Number
+    },
+    weight:{
+        type:String
     },
     numOfReviews: {
         type: Number,

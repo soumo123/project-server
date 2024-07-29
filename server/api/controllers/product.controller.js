@@ -119,21 +119,23 @@ const createProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
 
-    let { name, description, other_description1, other_description2, weight, unit, type, price, stock, color, size, visiblefor, discount, deliverydays, tags, isBestSelling, isFeatured,
+    let { name, description, other_description1, other_description2, weight, unit, type, color, size, visiblefor, deliverydays, tags, isBestSelling, isFeatured,
         isTopSelling, isBranded, isOffered, purchase_price, delivery_partner, selling_price_method, zomato_service, swiggy_service, zepto_service, blinkit_service,
         zomato_service_price, swiggy_service_price, zepto_service_price, blinkit_service_price, product_type
     } = req.body;
-    console.log("isBestSelling, isFeatured, isTopSelling, isBranded, isOffered,", isBestSelling)
+
+
+    console.log('JSON.parse(req.body.weight11)', JSON.parse(req.body.weight11))
     const adminId = req.params.adminId
     const productId = req.query.productId
     let files = req.files;
     console.log("files", files)
     let newTag = []
     console.log("tags", tags)
-    let actualpricebydiscount = undefined;
+    // let actualpricebydiscount = undefined;
     let thumbnailimage = "";
     let otherimages = []
-    console.log("req.body.price", req.body.price)
+    // console.log("req.body.price", req.body.price)
     try {
         if (tags) {
             if (Array.isArray(tags)) {
@@ -145,16 +147,16 @@ const updateProduct = async (req, res, next) => {
         }
         console.log("newTag", newTag)
 
-        if (!name || !description || !type || !stock) {
+        if (!name || !description || !type) {
             return res.status(400).send({
                 message: 'Field is missing'
             });
         }
-        if (discount) {
-            const discountData = Number(req.body.price) * discount / 100
-            console.log("actualpricebydiscountwwwwwwwww", discountData)
-            actualpricebydiscount = Number(req.body.price) - discountData
-        }
+        // if (discount) {
+        //     const discountData = Number(req.body.price) * discount / 100
+        //     console.log("actualpricebydiscountwwwwwwwww", discountData)
+        //     actualpricebydiscount = Number(req.body.price) - discountData
+        // }
         let searchString = name + description + Number(req.body.price)
         if (files.length > 0) {
             console.log("comming 1")
@@ -183,10 +185,10 @@ const updateProduct = async (req, res, next) => {
                 other_description2: other_description2,
                 weight: JSON.parse(req.body.weight11),
                 unit: unit,
-                price: Number(price),
-                discount: Number(discount),
-                actualpricebydiscount: Number(actualpricebydiscount),
-                stock: stock,
+                // // price: Number(price),
+                // // discount: Number(discount),
+                // // actualpricebydiscount: Number(actualpricebydiscount),
+                // stock: stock,
                 color: color,
                 size: JSON.parse(req.body.size1),
                 purchase_price: purchase_price,
@@ -214,37 +216,41 @@ const updateProduct = async (req, res, next) => {
                 isOffered: Boolean(isOffered),
             }
             const product = await Product.updateOne({ productId: productId, type: Number(type), adminId: adminId }, { $set: json })
+            const weights = JSON.parse(req.body.weight11);
 
-            const whishList = await Whishlists.updateMany({ productId: productId, type: Number(type) }, {
-                $set: {
-                    name: name,
-                    description: description,
-                    price: Number(actualpricebydiscount),
-                    discount: Number(discount),
-                    stock: Number(stock),
-                    thumbnailimage: thumbnailimage
+
+            for (const weight of weights) {
+                await Whishlists.updateMany(
+                    { productId: productId, weight: weight.weight },
+                    { $set: { price: Number(weight.price), stock: Number(weight.stock) } }
+                );
+                const cartItems = await Cart.find({ type: Number(type), "products.productId": productId, "products.weight": weight.weight }).exec();
+                for (const cart of cartItems) {
+                    for (const product of cart.products) {
+                        if (product.productId === productId && product.weight === weight.weight) {
+                            let totalPrice = weight.price * product.itemCount;
+                        
+                            // Update Cart
+                            await Cart.updateMany(
+                                { type: Number(type), "products.productId": productId, "products.weight": weight.weight },
+                                {
+                                    $set: {
+                                        "products.$[elem].price": Number(weight.price),
+                                        "products.$[elem].stock": Number(weight.stock),
+                                        "products.$[elem].totalPrice": Number(totalPrice)
+                                    }
+                                },
+                                {
+                                    arrayFilters: [{ "elem.productId": productId, "elem.weight": weight.weight }]
+                                }
+                            );
+                        }
+                    }
                 }
-            })
+            }
 
-            const carts = await Cart.updateMany({ type: Number(type) },
-                {
-                    $set: {
-                        "products.$[elem].name": name,
-                        "products.$[elem].description": description,
-                        "products.$[elem].price": Number(actualpricebydiscount),
-                        "products.$[elem].totalPrice": Number(actualpricebydiscount),
-                        "products.$[elem].discount": Number(discount)
-                    },
-
-                },
-                {
-                    arrayFilters: [{ "elem.productId": productId }]
-                }
-
-            )
 
         } else {
-            console.log("comming 2", isBestSelling)
             const product = await Product.updateOne({ productId: productId, type: Number(type), adminId: adminId }, {
                 $set: {
                     adminId: adminId,
@@ -256,10 +262,10 @@ const updateProduct = async (req, res, next) => {
                     other_description2: other_description2,
                     weight: JSON.parse(req.body.weight11),
                     unit: unit,
-                    price: Number(price),
-                    discount: Number(discount),
-                    actualpricebydiscount: Number(actualpricebydiscount),
-                    stock: stock,
+                    // price: Number(price),
+                    // discount: Number(discount),
+                    // actualpricebydiscount: Number(actualpricebydiscount),
+                    // stock: stock,
                     color: color,
                     size: JSON.parse(req.body.size1),
                     purchase_price: purchase_price,
@@ -287,33 +293,54 @@ const updateProduct = async (req, res, next) => {
             })
 
 
-            const whishList = await Whishlists.updateMany({ productId: productId, type: Number(type) }, {
-                $set: {
-                    name: name,
-                    description: description,
-                    price: Number(actualpricebydiscount),
-                    discount: Number(discount),
-                    stock: Number(stock)
+            const weights = JSON.parse(req.body.weight11);
 
+            for (const weight of weights) {
+                await Whishlists.updateMany(
+                    { productId: productId, weight: weight.weight },
+                    { $set: { price: Number(weight.price), stock: Number(weight.stock) } }
+                );
+                const cartItems = await Cart.find({ type: Number(type), "products.productId": productId, "products.weight": weight.weight }).exec();
+                for (const cart of cartItems) {
+                    for (const product of cart.products) {
+                        if (product.productId === productId && product.weight === weight.weight) {
+                            let totalPrice = weight.price * product.itemCount;
+                        
+                            // Update Cart
+                            await Cart.updateMany(
+                                { type: Number(type), "products.productId": productId, "products.weight": weight.weight },
+                                {
+                                    $set: {
+                                        "products.$[elem].price": Number(weight.price),
+                                        "products.$[elem].stock": Number(weight.stock),
+                                        "products.$[elem].totalPrice": Number(totalPrice)
+                                    }
+                                },
+                                {
+                                    arrayFilters: [{ "elem.productId": productId, "elem.weight": weight.weight }]
+                                }
+                            );
+                        }
+                    }
                 }
-            })
+            }
 
-            const carts = await Cart.updateMany({ type: Number(type) },
-                {
-                    $set: {
-                        "products.$[elem].name": name,
-                        "products.$[elem].description": description,
-                        "products.$[elem].price": Number(actualpricebydiscount),
-                        "products.$[elem].totalPrice": Number(actualpricebydiscount),
-                        "products.$[elem].discount": Number(discount)
-                    },
+            // const carts = await Cart.updateMany({ type: Number(type) },
+            //     {
+            //         $set: {
+            //             "products.$[elem].name": name,
+            //             "products.$[elem].description": description,
+            //             "products.$[elem].price": Number(actualpricebydiscount),
+            //             "products.$[elem].totalPrice": Number(actualpricebydiscount),
+            //             "products.$[elem].discount": Number(discount)
+            //         },
 
-                },
-                {
-                    arrayFilters: [{ "elem.productId": productId }]
-                }
+            //     },
+            //     {
+            //         arrayFilters: [{ "elem.productId": productId }]
+            //     }
 
-            )
+            // )
         }
 
 
@@ -656,7 +683,7 @@ const addToCart = async (req, res) => {
     const type = Number(req.query.type);
 
     try {
-        const { name, description, price, itemCount, discount, weight, color, thumbImage, totalPrice } = req.body;
+        const { name, description, price, itemCount, weight, stock, color, thumbImage, totalPrice } = req.body;
 
         const user = await Cart.findOne({ userId: userId });
 
@@ -706,7 +733,7 @@ const addToCart = async (req, res) => {
 
         // Check if the product already exists in the cart
         user.products.forEach((product, index) => {
-            if (product.productId === productId && product.weight===weight && product.color===color) {
+            if (product.productId === productId && product.weight === weight && product.color === color) {
                 productIndex = index;
             }
         });
@@ -718,11 +745,12 @@ const addToCart = async (req, res) => {
                 productId: productId,
                 name: name,
                 weight: weight,
+                stock: stock,
                 description: description,
-                color:color,
+                color: color,
                 price: Number(price),
                 itemCount: Number(itemCount),
-                discount: Number(discount),
+                // discount: Number(discount),
                 totalPrice: Number(totalPrice),
                 thumbImage: thumbImage
             });
@@ -735,16 +763,17 @@ const addToCart = async (req, res) => {
                 name: name,
                 description: description,
                 weight: weight,
-                color:color,
+                stock: stock,
+                color: color,
                 price: Number(price),
                 itemCount: carts.products[0].itemCount + Number(itemCount),
-                discount: Number(discount),
+                // discount: Number(discount),
                 totalPrice: Number(price) * (carts.products[0].itemCount + Number(itemCount)),
                 thumbImage: thumbImage
 
             };
         }
-       
+
         // Save the updated cart
         await user.save();
 
@@ -989,7 +1018,9 @@ const addWhishList = async (req, res) => {
         const type = Number(req.query.type)
         const prouctId = req.query.productId
 
-        const { name, description, price, discount, stock, ratings, thumbnailimage, numOfReviews, totalPrice } = req.body;
+        // const { name, description, price, discount, stock, ratings, thumbnailimage, numOfReviews, totalPrice } = req.body;
+        const { name, description, price, ratings, stock, weight, thumbnailimage, numOfReviews, totalPrice } = req.body;
+
 
         const whislistData = await Whishlists.findOne({ type: type, userId: userId, productId: prouctId })
         console.log("whislistData", whislistData)
@@ -1008,8 +1039,9 @@ const addWhishList = async (req, res) => {
                     name: name,
                     description: description,
                     price: price,
-                    discount: discount,
+                    // discount: discount,
                     stock: stock,
+                    weight: weight,
                     numOfReviews: numOfReviews,
                     ratings: ratings,
                     thumbnailimage: thumbnailimage
@@ -1028,7 +1060,8 @@ const addWhishList = async (req, res) => {
                 name: name,
                 description: description,
                 price: price,
-                discount: discount,
+                weight: weight,
+                // discount: discount,
                 numOfReviews: numOfReviews,
                 stock: stock,
                 ratings: ratings,
@@ -1056,7 +1089,7 @@ const getWhishListProducts = async (req, res) => {
 
     try {
 
-        const result = await Whishlists.find({ userId: userId, type: type, likes: true });
+        const result = await Whishlists.find({ userId: userId, type: type, likes: true }).sort({ _id: -1 });
         if (result.length === 0) {
             return res.status(404).send({ message: "No whishlist product found", data: [] })
         }
@@ -1089,8 +1122,8 @@ const countUpdate = async (req, res) => {
                 userId: userId,
                 type: type,
                 "products.productId": productId,
-                "products.color":color,
-                "products.weight":weight
+                "products.color": color,
+                "products.weight": weight
             },
             {
                 $set: {
@@ -1136,6 +1169,39 @@ const updateCategoryStatus = async (req, res) => {
 }
 
 
+const productPriceVariation = async (req, res) => {
+
+    const { weight, productId, type } = req.query;
+
+
+    try {
+        if (!weight || !productId || !type) {
+            return res.status(400).send({ message: "Field Is missing", success: false })
+        }
+
+        const result = await Product.aggregate([
+            { $match: { productId: productId, type: Number(type) } },
+            { $unwind: '$weight' }, // Deconstruct the weight array
+            { $match: { 'weight.weight': weight } }, // Filter by weight
+            { $project: { _id: 0, price: '$weight.price', stock: '$weight.stock' } } // Project the price field
+        ]);
+        if (result.length === 0) {
+            return res.status(400).send({ message: "Not Found", success: false })
+        }
+
+        let price = result[0].price;
+        let stock = result[0].stock;
+        return res.status(200).send({ success: true, data: { price, stock } })
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ message: "Internal Server Error", error: error.message });
+    }
+
+}
+
+
+
 module.exports = {
     createProduct,
     updateProduct,
@@ -1156,5 +1222,6 @@ module.exports = {
     addWhishList,
     getWhishListProducts,
     countUpdate,
-    updateCategoryStatus
+    updateCategoryStatus,
+    productPriceVariation
 } 

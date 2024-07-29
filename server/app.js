@@ -8,6 +8,7 @@ const product = require('./api/routes/product/product.routes.js')
 const setting = require('./api/routes/settings/setting.routes.js')
 const checkouts = require("./api/routes/checkougt/checkout.routes.js")
 const orders = require('./api/routes/order/order.routes.js')
+const vendorsagents = require("././api/routes/vendor/vendor.routes.js")
 const dotenv = require('dotenv');
 
 dotenv.config({
@@ -23,7 +24,7 @@ const allowedOrigins = [
 
 ];
 
-console.log("Allowed Origins:", allowedOrigins);
+// console.log("Allowed Origins:", allowedOrigins);
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -42,7 +43,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // For preflight requests (OPTIONS method)
-app.options('*', cors(corsOptions));
+// app.options('*', cors(corsOptions));
 
 // For handling non-preflight requests
 app.use((req, res, next) => {
@@ -74,6 +75,7 @@ app.use("/api/v1/product",product)
 app.use("/api/v1/settings",setting)
 app.use("/api/v1/checkout",checkouts)
 app.use("/api/v1/orders",orders)
+app.use("/api/v1/inventory",vendorsagents)
 
 app.get('/',function(req,res){
   res.set('Content-type', 'text/html;charset=utf-8');

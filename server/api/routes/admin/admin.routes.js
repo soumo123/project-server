@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signIn, signUp,getUser, getAllImages, getuserDetailsByAdmin, userSpecificDetails, registerAdmin, signinAdmin, getAdmin, createShop, getAllShopsForParticularOwner, addReview, getAllReviews } = require('../../controllers/admin.controller.js');
+const { signIn, signUp,getUser, getAllImages, getuserDetailsByAdmin, userSpecificDetails, registerAdmin, signinAdmin, getAdmin, createShop, getAllShopsForParticularOwner, addReview, getAllReviews, dashboardContents, getTax, updateTax } = require('../../controllers/admin.controller.js');
 const {ensureAuthenticated} = require('../../middleware/jwtVerify.js')
 const multer = require('multer');
 
@@ -28,6 +28,11 @@ router.post('/craete_shop',upload,createShop)
 router.get("/get_all_shops",getAllShopsForParticularOwner)
 
 
+router.get("/getdashbordDetails",dashboardContents)
+
+
+router.put('/update_tax',updateTax)
+router.get('/get_tax',getTax)
 
 
 module.exports = router

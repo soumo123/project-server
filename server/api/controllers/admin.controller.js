@@ -1,5 +1,6 @@
 const User = require('../models/user.model.js')
 const Cart = require('../models/cart.model.js')
+const Order = require('../models/order.model.js')
 const Admin = require('../models/admin.model.js')
 const Images = require('../models/images.model.js')
 const Product = require('../models/product.model.js')
@@ -9,7 +10,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Shops = require('../models/shop.model.js')
 const Settings = require('../models/settings.model.js')
-
+const Tax  = require('../models/Tax.model.js')
 
 
 
@@ -197,15 +198,12 @@ const userSpecificDetails = async (req, res) => {
 
     const userId = req.query.userId;
     const type = Number(req.query.type);
-
+    let orders = []
     try {
 
         //get all add to cart products //
 
         const carts = await Cart.find({ type: type, userId: userId })
-        console.log("cartscarts", carts)
-
-
         let result1 = carts[0].products.length === 0 ? [] : carts[0].products.map((ele) => ({
             name: ele.name,
             description: ele.description,
@@ -217,14 +215,15 @@ const userSpecificDetails = async (req, res) => {
         }))
 
         //get all orders ///
-
-
-
+        orders = await Order.findOne({userId:userId})
+        if(!orders){
+            orders = []
+        }
 
         return res.status(200).send({
             message: 'Get All Data',
             carts: result1,
-            orders: []
+            orders: orders
         })
 
     } catch (error) {
@@ -543,5 +542,127 @@ const getAllReviews = async (req, res) => {
 }
 
 
+const dashboardContents = async (req, res) => {
+    const shop_id = req.query.shop_id;
+    const type = Number(req.query.type);
+    const year = req.query.year; // Assuming year is passed as a query parameter
 
-module.exports = { signUp, signIn, getUser, getAllImages, getuserDetailsByAdmin, userSpecificDetails, registerAdmin, signinAdmin, createShop, getAdmin, getAllShopsForParticularOwner, addReview, getAllReviews }
+    // Initialize an object to hold the counts, revenue, and orders for each month
+    const monthData = {
+        "January": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "February": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "March": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "April": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "May": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "June": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "July": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "August": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "September": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "October": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "November": { totalOrders: 0, totalRevenue: 0, orders: [] },
+        "December": { totalOrders: 0, totalRevenue: 0, orders: [] }
+    };
+
+    try {
+        const users = await User.find({ type: type });
+        const products = await Product.find({ type: type });
+
+        let ordersQuery = { type: type, shop_id: shop_id };
+
+        // Optionally filter by year if provided
+        if (year) {
+            // Assuming orders have a created_at field
+            const startDate = new Date(`${year}-01-01`);
+            const endDate = new Date(`${year}-12-31`);
+            ordersQuery.created_at = { $gte: startDate, $lte: endDate };
+        }
+
+        const orders = await Order.find(ordersQuery);
+
+        orders.forEach(order => {
+            // Extract the month from the created_at date
+            const date = new Date(order.created_at);
+            const month = date.toLocaleString('default', { month: 'long' });
+            const orderedPrice = order.orderedPrice || 0; // Ensure orderedPrice is valid
+
+            // Increment the count for the month, add to total revenue, and push order to orders array
+            monthData[month].totalOrders++;
+            monthData[month].totalRevenue += orderedPrice;
+            monthData[month].orders.push(order);
+        });
+
+        // Convert the monthData object to an array of objects
+        const result = Object.keys(monthData).map(month => ({
+            month,
+            totalOrders: monthData[month].totalOrders,
+            totalRevenue: monthData[month].totalRevenue,
+        }));
+
+        // Sort the result by month
+        const monthOrder = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        result.sort((a, b) => monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month));
+
+        return res.status(200).send({
+            message: "Dashboard Details",
+            users: users.length,
+            products: products.length,
+            orders: orders.length,
+            result
+        });
+
+    } catch (error) {
+        console.log(error.stack);
+        return res.status(500).send({ message: "Internal Server Error", error: error.stack });
+    }
+};
+
+const updateTax = async(req,res)=>{
+
+    try {
+        const {cgst,sgst,cgstvalue,sgstvalue} = req.body
+        const adminId = req.query.adminId
+
+        let response  = await Tax.updateOne({},{$set:{
+            adminId:adminId,
+            cgst:Number(cgst),
+            sgst:Number(sgst),
+            cgstvalue:Number(cgstvalue),
+            sgstvalue:Number(sgstvalue)
+        }})
+        
+        return res.status(201).send({message: "Tax Updated",success:true})
+        
+    } catch (error) {
+        console.log(error.stack);
+        return res.status(500).send({ message: "Internal Server Error", error: error.stack });
+    }
+}
+
+
+
+
+
+const getTax = async(req,res)=>{
+    
+    try {
+        const adminId = req.query.adminId
+        const tax = await Tax.findOne({})
+        if(!tax){
+            return res.status(400).send({message: "Tax Not Found",success:false})
+        }
+        return res.status(200).send({message:"Get all tax",data:tax})
+        
+    } catch (error) {
+        console.log(error.stack);
+        return res.status(500).send({ message: "Internal Server Error", error: error.stack });
+    }
+    
+}
+
+
+
+module.exports = { signUp, signIn, getUser, getAllImages, getuserDetailsByAdmin, userSpecificDetails, registerAdmin, signinAdmin, createShop, getAdmin, getAllShopsForParticularOwner, addReview, getAllReviews,dashboardContents , updateTax ,getTax}

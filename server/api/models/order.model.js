@@ -9,6 +9,14 @@ const orderSchema = new mongoose.Schema({
     userId: {
         type: String
     },
+    username:{
+        type:String,
+        default:""
+    },
+    adminId:{
+        type:String,
+        default:""
+    },
     shopId: {
         type: String
     },
@@ -20,17 +28,34 @@ const orderSchema = new mongoose.Schema({
         type: Array,
         required: true
     },
-    tax:{
+    sgst:{
         type:Number
     },
-    shippingPrice:{
-        type:String
+    cgst:{
+        type:Number
     },
     initialDeposit:{
-        type:Number
+        type:Number,
+        default:0
     },
     orderedPrice:{
         type:Number
+    },
+    extrathings:{
+        type:String,
+        default:""
+    },
+    extraprice:{
+        type:Number,
+        default:0
+    },
+    notes:{
+        type:String,
+        default:""
+    },
+    discount:{
+        type:Number,
+        default:0
     },
 
     paymentmethod: {
